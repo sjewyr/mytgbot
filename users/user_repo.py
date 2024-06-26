@@ -24,6 +24,7 @@ class UserDAO:
             else:
                 return False
             
+    @Logger.log_exception
     async def buy_building(self, telegram_id: int, building_id: int) -> bool:
         async with self.connection_manager as conn:
             can_afford = await conn.fetchval("SELECT u.currency > (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
@@ -45,3 +46,8 @@ class UserDAO:
                                (SELECT count FROM users_buildings WHERE user_id = ub.user_id AND building_id=ub.building_id) * (SELECT income FROM buildings b WHERE b.id = ub.building_id) AS result 
                                FROM users_buildings ub GROUP BY ub.user_id, ub.building_id) ass GROUP BY user_id) asss WHERE user_id = id)""")
             self.logger.info(f"Currency ticked")
+
+    @Logger.log_exception
+    async def get_currency(self, telegram_id: int) -> int:
+        async with self.connection_manager as conn:
+            return await conn.fetchval("SELECT currency FROM users WHERE telegram_id = $1", telegram_id)

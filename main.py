@@ -67,8 +67,8 @@ class Game:
 
     @Logger.log_exception
     async def balance(self, message: types.Message):
-        user_id = message.from_user.user_id()
-        balance = await self.user_dao.get_balance(user_id)
+        user_id = message.from_user.id
+        balance = await self.user_dao.get_currency(user_id)
         await message.answer(f"Ваш баланс: {balance}")
 
     @Logger.log_exception
