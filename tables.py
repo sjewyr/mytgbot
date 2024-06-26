@@ -54,11 +54,13 @@ class MigrationManager:
 
     @Logger.log_exception
     async def drop_tables(self):
+        self.logger.debug("Deprecetaed usage")
         async with self.ConnectionManager as connection:
             await connection.execute(self.drop_tables_string)
             self.logger.debug("Dropped all tables: %s", self.tables.keys())
     @Logger.log_exception
     async def create_tables(self):
+        self.logger.debug("Deprecetaed usage")
         async with self.ConnectionManager as connection:
             for table in self.tables.keys():
                 await connection.execute(self.tables[table])
@@ -77,10 +79,14 @@ class MigrationManager:
                 if file.endswith(".sql"):
                     self.logger.debug("Found migraitions file: %s" % file)
                     if await connection.fetchrow("SELECT * FROM migrations WHERE filename = $1", file):
-                        self.logger.debug("Migration file already exists: %s" % file)
+                        self.logger.debug("Migration already applied: %s" % file)
                         continue
                     with open(os.path.join(migrations_dir, file), "r") as migration:
-                        await connection.execute(migration.read())
+                        text = migration.read()
+                        if not text:
+                            self.logger.debug("Migration file is empty or incorrect: %s" % file)
+                            continue
+                        await connection.execute(text)
                         await connection.execute("INSERT INTO migrations (filename) VALUES ($1)", file)
                         self.logger.debug("Migrated file: %s" % file)
                     

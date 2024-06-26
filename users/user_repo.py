@@ -23,3 +23,25 @@ class UserDAO:
                 return True
             else:
                 return False
+            
+    async def buy_building(self, telegram_id: int, building_id: int) -> bool:
+        async with self.connection_manager as conn:
+            can_afford = await conn.fetchval("SELECT u.currency > (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
+            if not can_afford:
+                return False
+            await conn.execute(
+                "INSERT INTO users_buildings (user_id, building_id, count) VALUES ((SELECT id FROM users WHERE telegram_id = $1), $2, 1) ON CONFLICT (user_id, building_id) DO UPDATE SET count = users_buildings.count + 1;",
+                telegram_id,
+                building_id,
+            )
+            return True
+    @Logger.log_exception    
+    async def currency_tick(self):
+        async with self.connection_manager as conn:
+            await conn.execute("""UPDATE users SET currency = currency + 
+                               (SELECT final_res FROM 
+                               (SELECT user_id, SUM(result) as final_res FROM 
+                               (SELECT ub.user_id, 
+                               (SELECT count FROM users_buildings WHERE user_id = ub.user_id AND building_id=ub.building_id) * (SELECT income FROM buildings b WHERE b.id = ub.building_id) AS result 
+                               FROM users_buildings ub GROUP BY ub.user_id, ub.building_id) ass GROUP BY user_id) asss WHERE user_id = id)""")
+            self.logger.info(f"Currency ticked")

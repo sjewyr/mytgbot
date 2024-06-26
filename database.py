@@ -1,3 +1,4 @@
+from typing import Type
 import asyncpg
 import os
 from settings import Settings
@@ -28,3 +29,8 @@ class ConnectionManager:
 
     async def __aexit__(self, exc_type, exc, tb):
         await self.connection.close()
+
+    async def fetch_objects(self, query, cls: Type):
+        async with self as connection:
+            res =  await connection.fetch(query)
+            return [cls(**obj) for obj in res]
