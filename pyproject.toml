@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "telegrambot"
+version = "0.1.0"
+description = ""
+authors = ["sjewyr <ganshin.2004@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+asyncio = "^3.4.3"
+aiogram = "^3.8.0"
+python-dotenv = "^1.0.1"
+colorlog = "^6.8.2"
+asyncpg = "^0.29.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
