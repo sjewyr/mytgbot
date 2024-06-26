@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Start Bot",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: Migrate",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "tables.py",
+            "console": "integratedTerminal",
+            "args": "migrate"
+        },
+        {
             "name": "Python Debugger: Create Tables",
             "type": "debugpy",
             "request": "launch",

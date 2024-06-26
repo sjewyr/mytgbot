@@ -45,28 +45,30 @@ date_file_handler = logging.FileHandler(
 date_file_handler.setFormatter(file_format)
 
 
-class Logger(logging.Logger):
+class Logger:
     def __init__(self, name):
-        super().__init__(name)
-        self.setLevel(logging.DEBUG)
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
 
         # Добавление уже созданных хендлеров к логгеру
-        self.addHandler(stream_handler)
-        self.addHandler(last_startup_file_handler)
-        self.addHandler(date_file_handler)
+        self.logger.addHandler(stream_handler)
+        self.logger.addHandler(last_startup_file_handler)
+        self.logger.addHandler(date_file_handler)
 
     def get_logger(self):
-        return self
+        return self.logger
 
     @staticmethod
     def log_exception(func):
         @wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             try:
-                return func(self, *args, **kwargs)
+                res = await func(self, *args, **kwargs)
+                return res
             except Exception as e:
                 logger: Logger = self.logger
-                logger.exception(f"Exception in {func.__name__} " + str(e))
+                logger.exception(f"Exception in {func.__name__} "+ str(e))
                 raise e
+                
         return wrapper
             

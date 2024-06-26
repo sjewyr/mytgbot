@@ -1,3 +1,5 @@
+import os
+from asyncpg import connect
 from database import ConnectionManager
 import sys
 from logger import Logger
@@ -66,6 +68,22 @@ class MigrationManager:
         await self.drop_tables()
         await self.create_tables()
 
+    @Logger.log_exception
+    async def migrate(self):
+        async with self.ConnectionManager as connection:
+            await connection.execute("CREATE TABLE IF NOT EXISTS migrations (id SERIAL PRIMARY KEY, filename VARCHAR(255) NOT NULL)")
+            migrations_dir = os.path.join(os.path.curdir, os.path.dirname("migrations/"))
+            for file in os.listdir(migrations_dir):
+                if file.endswith(".sql"):
+                    self.logger.debug("Found migraitions file: %s" % file)
+                    if await connection.fetchrow("SELECT * FROM migrations WHERE filename = $1", file):
+                        self.logger.debug("Migration file already exists: %s" % file)
+                        continue
+                    with open(os.path.join(migrations_dir, file), "r") as migration:
+                        await connection.execute(migration.read())
+                        await connection.execute("INSERT INTO migrations (filename) VALUES ($1)", file)
+                        self.logger.debug("Migrated file: %s" % file)
+                    
 
 async def main():
     if len(sys.argv) < 2:
@@ -78,6 +96,8 @@ async def main():
         await migrations.drop_tables()
     elif sys.argv[1] == "recreate":
         await migrations.recreate_tables()
+    elif sys.argv[1] == "migrate":
+        await migrations.migrate()
     else:
         print("Unknown command")
 
