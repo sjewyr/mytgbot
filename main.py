@@ -49,7 +49,7 @@ class Game:
     async def update(self, message: types.Message):
         
         await message.answer("Обновление клавиатуры", reply_markup=MyBasicKeyboard().get_keyboard())
-        await self.logger.info(f"User {message.from_user.id} updated keyboard")
+        self.logger.info(f"User {message.from_user.id} updated keyboard")
 
     @Logger.log_exception
     async def message_buildings_list(self, message: types.Message):
