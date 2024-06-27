@@ -29,6 +29,7 @@ class UserDAO:
         async with self.connection_manager as conn:
             can_afford = await conn.fetchval("SELECT u.currency >= (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
             if not can_afford:
+                self.logger(f"User {telegram_id} cannot afford {building_id}")
                 return False
             
             await conn.execute ("UPDATE users SET currency = currency - (SELECT b.cost FROM buildings b WHERE b.id = $1) WHERE telegram_id = $2", building_id, telegram_id)
