@@ -45,6 +45,7 @@ class MigrationManager:
         DROP TABLE IF EXISTS users_buildings;
         DROP TABLE IF EXISTS users;
         DROP TABLE IF EXISTS buildings;
+        DROP TABLE IF EXISTS migrations;
         """
         self.tables = {
             "Users": self.users,
@@ -75,7 +76,7 @@ class MigrationManager:
         async with self.ConnectionManager as connection:
             await connection.execute("CREATE TABLE IF NOT EXISTS migrations (id SERIAL PRIMARY KEY, filename VARCHAR(255) NOT NULL)")
             migrations_dir = os.path.join(os.path.curdir, os.path.dirname("migrations/"))
-            for file in os.listdir(migrations_dir):
+            for file in sorted(os.listdir(migrations_dir)):
                 if file.endswith(".sql"):
                     self.logger.debug("Found migraitions file: %s" % file)
                     if await connection.fetchrow("SELECT * FROM migrations WHERE filename = $1", file):
@@ -88,7 +89,7 @@ class MigrationManager:
                             continue
                         await connection.execute(text)
                         await connection.execute("INSERT INTO migrations (filename) VALUES ($1)", file)
-                        self.logger.debug("Migrated file: %s" % file)
+                        self.logger.debug("Migration applied: %s" % file)
                     
 
 async def main():

@@ -9,7 +9,5 @@ class BuildingDAO:
     @Logger.log_exception
     async def list_buildings(self) -> list[Building]:
         res = await self.connection_manager.fetch_objects("SELECT * FROM buildings", Building)
-
-        print(res)
         self.logger.info(res)
         return res

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id SERIAL PRIMARY KEY,
     telegram_id BIGINT UNIQUE NOT NULL,
-    currency BIGINT DEFAULT 0
+    currency BIGINT DEFAULT 500
 ); 
 CREATE TABLE IF NOT EXISTS buildings
 (
