@@ -27,7 +27,7 @@ class UserDAO:
     @Logger.log_exception
     async def buy_building(self, telegram_id: int, building_id: int) -> bool:
         async with self.connection_manager as conn:
-            can_afford = await conn.fetchval("SELECT u.currency > (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
+            can_afford = await conn.fetchval("SELECT u.currency >= (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
             if not can_afford:
                 return False
             
