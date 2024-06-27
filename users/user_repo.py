@@ -10,7 +10,7 @@ class UserDAO:
     async def register_user(self, telegram_id: int) -> None:
         async with self.connection_manager as conn:
             await conn.execute(
-                "INSERT INTO users (telegram_id, currency) VALUES ($1, 500)", telegram_id
+                "INSERT INTO users (telegram_id) VALUES ($1)", telegram_id
             )
             self.logger.info(f"User {telegram_id} registered")
 
@@ -29,7 +29,7 @@ class UserDAO:
         async with self.connection_manager as conn:
             can_afford = await conn.fetchval("SELECT u.currency >= (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2", building_id, telegram_id)
             if not can_afford:
-                self.logger(f"User {telegram_id} cannot afford {building_id}")
+                self.logger.info((f"User {telegram_id} cannot afford {building_id}"))
                 return False
             
             await conn.execute ("UPDATE users SET currency = currency - (SELECT b.cost FROM buildings b WHERE b.id = $1) WHERE telegram_id = $2", building_id, telegram_id)
@@ -61,7 +61,7 @@ class UserDAO:
                                          (SELECT user_id, (ub.count*(SELECT b.income FROM buildings b WHERE b.id = ub.building_id)) as res 
                                          FROM users_buildings ub 
                                          GROUP BY ub.user_id, ub.building_id, ub.count) temp 
-                                         WHERE user_id = (SELECT id FROM users WHERE telegram_id = $1)""", telegram_id)
+                                         WHERE user_id = (SELECT id FROM users WHERE telegram_id = $1)""", telegram_id) or 0
         
 
         
