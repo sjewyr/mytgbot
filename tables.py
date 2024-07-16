@@ -61,6 +61,7 @@ class MigrationManager:
         async with self.ConnectionManager as connection:
             await connection.execute(self.drop_tables_string)
             self.logger.debug("Dropped all tables: %s", self.tables.keys())
+
     @Logger.log_exception
     async def create_tables(self):
         self.logger.debug("Deprecetaed usage")
@@ -68,6 +69,7 @@ class MigrationManager:
             for table in self.tables.keys():
                 await connection.execute(self.tables[table])
                 self.logger.debug("Created table: %s" % table)
+
     @Logger.log_exception
     async def recreate_tables(self):
         await self.drop_tables()
@@ -82,29 +84,49 @@ class MigrationManager:
                 await self.ConnectionManager.create_database()
                 self.logger.debug("Database created successfully; Continuing...")
             except Exception as e:
-                self.logger.fatal("Error while creating database: %s; Shutting down..." % str(e))
+                self.logger.fatal(
+                    "Error while creating database: %s; Shutting down..." % str(e)
+                )
                 return
         async with self.ConnectionManager as connection:
-            await connection.execute("CREATE TABLE IF NOT EXISTS migrations (id SERIAL PRIMARY KEY, filename VARCHAR(255) NOT NULL)")
-            migrations_dir = os.path.join(os.path.curdir, os.path.dirname("migrations/"))
+            await connection.execute(
+                "CREATE TABLE IF NOT EXISTS migrations (id SERIAL PRIMARY KEY, filename VARCHAR(255) NOT NULL)"
+            )
+            migrations_dir = os.path.join(
+                os.path.curdir, os.path.dirname("migrations/")
+            )
             for file in sorted(os.listdir(migrations_dir)):
                 if file.endswith(".sql"):
                     self.logger.debug("Found migraitions file: %s" % file)
-                    if await connection.fetchrow("SELECT * FROM migrations WHERE filename = $1", file):
+                    if await connection.fetchrow(
+                        "SELECT * FROM migrations WHERE filename = $1", file
+                    ):
                         self.logger.debug("Migration already applied: %s" % file)
                         continue
                     with open(os.path.join(migrations_dir, file), "r") as migration:
                         text = migration.read()
                         if not text:
-                            self.logger.debug("Migration file is empty or incorrect: %s" % file)
+                            self.logger.debug(
+                                "Migration file is empty or incorrect: %s" % file
+                            )
                             continue
                         await connection.execute(text)
-                        await connection.execute("INSERT INTO migrations (filename) VALUES ($1)", file)
+                        await connection.execute(
+                            "INSERT INTO migrations (filename) VALUES ($1)", file
+                        )
                         self.logger.debug("Migration applied: %s" % file)
+
     @Logger.log_exception
     async def drop_db(self):
         self.logger.debug("Dropping database: %s" % Settings.database_name)
         await self.ConnectionManager.drop_db()
+
+    @Logger.log_exception
+    async def create_db(self):
+        self.logger.debug("Creating database: %s" % Settings.database_name)
+        await self.ConnectionManager.create_database()
+
+
 async def main():
     if len(sys.argv) < 2:
         print("Usage: python tables.py <command>")

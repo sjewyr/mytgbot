@@ -67,8 +67,7 @@ class Logger:
                 return res
             except Exception as e:
                 logger: Logger = self.logger
-                logger.exception(f"Exception in {func.__name__} "+ str(e))
+                logger.exception(f"Exception in {func.__name__} " + str(e))
                 raise e
-                
+
         return wrapper
-            
