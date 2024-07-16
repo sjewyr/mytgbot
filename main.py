@@ -1,6 +1,7 @@
 import asyncio
 import signal
 from buildings.buildings_repo import BuildingDAO
+from database import ConnectionManager
 from settings import Settings
 from aiogram import F, Dispatcher, Bot, Router, types
 from aiogram.client.default import DefaultBotProperties
@@ -121,9 +122,15 @@ class Game:
 
 
 async def main():
+    check = await ConnectionManager().check_database()
+    if not check:
+        logger.fatal("Database is not initialized; Shutting down.")
+        return
+    logger.info("Database is initialized")
     dp = Dispatcher()
     game = Game(dp)
     bot = Bot(token=Settings.token, default=DefaultBotProperties())
+    
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

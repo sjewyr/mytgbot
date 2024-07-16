@@ -9,7 +9,8 @@ class ConnectionManager:
     def __init__(self) -> None:
         self.pool = None
         self.logger = Logger(__class__.__name__).get_logger()
-        self.connection = None
+        self.connection = asyncpg.connect()
+        self.connection.close()
 
     async def __aenter__(self) -> asyncpg.Connection:
         try:
@@ -28,9 +29,17 @@ class ConnectionManager:
             )
 
     async def __aexit__(self, exc_type, exc, tb):
-        await self.connection.close()
+        if self.connection:
+            await self.connection.close()
 
     async def fetch_objects(self, query, cls: Type):
         async with self as connection:
             res =  await connection.fetch(query)
             return [cls(**obj) for obj in res]
+
+    async def check_database(self):
+        try:
+            async with self as connection:
+                return await connection.execute("SELECT 1")
+        except:
+            return False
