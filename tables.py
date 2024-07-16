@@ -5,6 +5,8 @@ import sys
 from logger import Logger
 import asyncio
 
+from settings import Settings
+
 
 class MigrationManager:
     def __init__(self):
@@ -73,6 +75,15 @@ class MigrationManager:
 
     @Logger.log_exception
     async def migrate(self):
+        check = await self.ConnectionManager.check_database()
+        if not check:
+            self.logger.debug("Database is not initialized; Trying to create...")
+            try:
+                await self.ConnectionManager.create_database()
+                self.logger.debug("Database created successfully; Continuing...")
+            except Exception as e:
+                self.logger.fatal("Error while creating database: %s; Shutting down..." % str(e))
+                return
         async with self.ConnectionManager as connection:
             await connection.execute("CREATE TABLE IF NOT EXISTS migrations (id SERIAL PRIMARY KEY, filename VARCHAR(255) NOT NULL)")
             migrations_dir = os.path.join(os.path.curdir, os.path.dirname("migrations/"))
@@ -90,8 +101,10 @@ class MigrationManager:
                         await connection.execute(text)
                         await connection.execute("INSERT INTO migrations (filename) VALUES ($1)", file)
                         self.logger.debug("Migration applied: %s" % file)
-                    
-
+    @Logger.log_exception
+    async def drop_db(self):
+        self.logger.debug("Dropping database: %s" % Settings.database_name)
+        await self.ConnectionManager.drop_db()
 async def main():
     if len(sys.argv) < 2:
         print("Usage: python tables.py <command>")
@@ -105,6 +118,8 @@ async def main():
         await migrations.recreate_tables()
     elif sys.argv[1] == "migrate":
         await migrations.migrate()
+    elif sys.argv[1] == "drop_db":
+        await migrations.drop_db()
     else:
         print("Unknown command")
 
