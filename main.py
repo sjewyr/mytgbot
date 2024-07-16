@@ -135,7 +135,7 @@ class Game:
             self.logger.warning("Unrecognizable data in buy building")
         telegram_id = callback.from_user.id
         if await self.user_dao.buy_building(telegram_id, building_id):
-            await callback.message.answer(f"Вы купили здание {building_id}")
+            await callback.message.answer(f"Вы купили здание {await self.building_dao.get_building_name(building_id)}")
             new_status = await self.user_dao.get_currency_status(telegram_id)
             await callback.message.answer(
                 f"Ваш баланс: {new_status[0]}$ + ({new_status[1]}$\мин)"

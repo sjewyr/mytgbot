@@ -15,3 +15,8 @@ class BuildingDAO:
         )
         self.logger.info(res)
         return res
+
+    @Logger.log_exception
+    async def get_building_name(self, id: int) -> str:
+        async with self.connection_manager as connection:
+            return await connection.fetchval("SELECT name FROM buildings WHERE id = $1", id)
