@@ -12,6 +12,8 @@ aiogram = "^3.8.0"
 python-dotenv = "^1.0.1"
 colorlog = "^6.8.2"
 asyncpg = "^0.29.0"
+celery = {extras = ["redis"], version = "^5.4.0"}
+redis = "^5.0.7"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

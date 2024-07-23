@@ -42,9 +42,9 @@ class ConnectionManager:
         if self.connection:
             await self.connection.close()
 
-    async def fetch_objects(self, query, cls: Type):
+    async def fetch_objects(self, query, cls: Type, *args):
         async with self as connection:
-            res = await connection.fetch(query)
+            res = await connection.fetch(query, *args)
             return [cls(**obj) for obj in res]
 
     async def check_database(self):

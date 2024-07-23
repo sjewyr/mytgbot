@@ -1,0 +1,64 @@
+networks:
+  database:
+    driver: bridge
+
+volumes:
+  database_data:
+    driver: local
+  redis_data:
+
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_service
+    env_file:
+      - .env
+    networks:
+      - database
+    volumes:
+      - ./redisdata:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  postgres:
+    container_name: postgres_service
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - database
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  tgbot:
+    container_name: tgbot
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/logs
+      
+    networks:
+      - database

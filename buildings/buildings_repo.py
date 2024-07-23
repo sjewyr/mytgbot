@@ -9,11 +9,11 @@ class BuildingDAO:
         self.logger = Logger(__class__.__name__).get_logger()
 
     @Logger.log_exception
-    async def list_buildings(self) -> list[Building]:
+    async def list_buildings(self,telegram_id:int) -> list[Building]:
         res = await self.connection_manager.fetch_objects(
-            "SELECT * FROM buildings", Building
+            "SELECT id, cost, name, income*(SELECT prestige FROM users WHERE telegram_id=$1) as income FROM buildings", Building, telegram_id
         )
-        self.logger.info(res)
+        self.logger.debug(res)
         return res
 
     @Logger.log_exception
