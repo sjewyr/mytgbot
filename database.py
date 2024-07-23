@@ -1,13 +1,15 @@
 from typing import Type
+
 import asyncpg
-from settings import Settings
+
 from logger import Logger
+from settings import Settings
 
 
 class ConnectionManager:
     def __init__(self) -> None:
         self.pool = None
-        self.logger = Logger(__class__.__name__).get_logger()
+        self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
         self.connection = asyncpg.connect()
         self.connection.close()
 

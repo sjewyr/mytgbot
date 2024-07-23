@@ -1,7 +1,9 @@
-from typing import Any, Awaitable, Callable, Optional
-from logger import Logger
-from celery.result import AsyncResult
 import asyncio
+from typing import Any, Awaitable, Callable, Optional
+
+from celery.result import AsyncResult
+
+from logger import Logger
 from tasks import app
 
 
@@ -9,7 +11,7 @@ class TaskManager:
     def __init__(self) -> None:
         self.logger = Logger("TaskManager").get_logger()
         self.tasks: dict[
-            AsyncResult, Optional[list[Callable, list[Any], dict[Any, Any]]]
+            AsyncResult, Optional[tuple[Callable, list[Any], dict[Any, Any]]]
         ] = {}
         asyncio.create_task(self.catch_results())
 
@@ -17,14 +19,14 @@ class TaskManager:
         self,
         task: Callable,
         delay: int,
-        args: list[Any] = None,
-        kwargs: dict[Any, Any] = None,
-        callback: Awaitable = None,
+        args: Optional[list[Any]] = None,
+        kwargs: Optional[dict[Any, Any]] = None,
+        callback: Optional[Awaitable] = None,
         args_for_callback=None,
         kwargs_for_callback=None,
     ):
         self.logger.info(f"Applying task {task.__name__} with delay {delay} seconds")
-        _task = task.apply_async(args, kwargs, countdown=delay)
+        _task = task.apply_async(args, kwargs, countdown=delay)  # type: ignore[attr-defined]
         self.tasks.update(
             {
                 _task: [callback, args_for_callback, kwargs_for_callback]

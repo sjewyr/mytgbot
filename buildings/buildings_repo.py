@@ -1,12 +1,13 @@
-from logger import Logger
 from database import ConnectionManager
-from buildings.schemas import Building
+from logger import Logger
+
+from .schemas import Building
 
 
 class BuildingDAO:
     def __init__(self) -> None:
         self.connection_manager = ConnectionManager()
-        self.logger = Logger(__class__.__name__).get_logger()
+        self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
 
     @Logger.log_exception
     async def list_buildings(self, telegram_id: int) -> list[Building]:

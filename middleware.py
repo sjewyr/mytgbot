@@ -1,6 +1,8 @@
 from typing import Any, Awaitable, Callable, Coroutine, Dict
+
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+
 from logger import Logger
 from users.user_repo import UserDAO
 
@@ -25,13 +27,13 @@ class LoginMiddleware(BaseMiddleware):
                     "Для просмотра этого контента необходимо зарегистрироваться (/start)"
                 )
                 self.logger.warning(f"User {event.from_user.id} is not registered")
-                return
+                return  # type: ignore
             else:
                 await event.message.answer(
                     "Для просмотра этого контента необходимо зарегистрироваться (/start)"
                 )
                 self.logger.warning(f"User {event.from_user.id} is not registered")
                 await event.answer()
-                return
+                return  # type: ignore
         result = await handler(event, data)
         return result

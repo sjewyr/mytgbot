@@ -5,7 +5,7 @@ from logger import Logger
 class UserDAO:
     def __init__(self) -> None:
         self.connection_manager = ConnectionManager()
-        self.logger = Logger(__class__.__name__).get_logger()
+        self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
 
     @Logger.log_exception
     async def prestige_up(self, telegram_id: int) -> None:
@@ -106,7 +106,7 @@ class UserDAO:
             )
 
     @Logger.log_exception
-    async def get_currency_status(self, telegram_id: int) -> int:
+    async def get_currency_status(self, telegram_id: int) -> list[int]:
         currency = await self.get_currency(telegram_id)
         income = await self.get_income(telegram_id)
         return [currency, income]

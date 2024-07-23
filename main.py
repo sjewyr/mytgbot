@@ -1,20 +1,18 @@
 import asyncio
 
-from buildings.buildings_repo import BuildingDAO
-from database import ConnectionManager
-from settings import Settings
-from aiogram import F, Dispatcher, Bot, Router, types
+from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+
+from buildings.buildings_repo import BuildingDAO
+from database import ConnectionManager
 from logger import Logger
-from users.user_repo import UserDAO
-from aiogram.utils.keyboard import (
-    ReplyKeyboardBuilder,
-    InlineKeyboardBuilder,
-)
 from middleware import LoginMiddleware
+from settings import Settings
 from task_manager import TaskManager
 from tasks import simple_task
+from users.user_repo import UserDAO
 
 
 class MyBasicKeyboard:
@@ -36,7 +34,7 @@ class Game:
     def __init__(self, dp: Dispatcher):
         self.user_dao = UserDAO()
         self.building_dao = BuildingDAO()
-        self.logger = Logger(__class__.__name__).get_logger()
+        self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
         self.dp = dp
         self.register_handlers()
         asyncio.create_task(self.currency_ticking())

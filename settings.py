@@ -1,6 +1,6 @@
-import dotenv
 import os
 
+import dotenv
 
 dotenv.load_dotenv(dotenv_path="./.env")
 
@@ -17,5 +17,7 @@ class Settings:
     database_port = os.environ.get("TELEGRAMBOT_DB_PORT")
     database_name = os.environ.get("TELEGRAMBOT_DB_NAME")
     log_dir = os.environ.get("TELEGRAMBOT_LOG_DIR")
-    currency_tick_interval = int(os.environ.get("TELEGRAMBOT_CURRENCY_TICK_INTERVAL"))
+    currency_tick_interval = int(
+        os.environ.get("TELEGRAMBOT_CURRENCY_TICK_INTERVAL") or 60
+    )
     prestige_formula = prestige_formula

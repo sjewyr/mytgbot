@@ -1,10 +1,11 @@
-import logging
-import colorlog
 import datetime
+import logging
 import os
-from settings import Settings
 from functools import wraps
 
+import colorlog
+
+from settings import Settings
 
 # Создание цветного форматера
 log_colors = {
@@ -24,8 +25,8 @@ file_format = logging.Formatter("[%(levelname)s %(asctime)s]: (%(name)s) %(messa
 
 # Создаем хендлеры, которые будут использоваться всеми логгерами
 log_dir = Settings.log_dir
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+if not os.path.exists(log_dir):  # type: ignore[arg-type]
+    os.makedirs(log_dir)  # type: ignore[arg-type]
 
 # Хендлер для потока
 stream_handler = logging.StreamHandler()
@@ -33,13 +34,14 @@ stream_handler.setFormatter(formatter)
 
 # Хендлер для файла последнего запуска с режимом 'w' (write)
 last_startup_file_handler = logging.FileHandler(
-    os.path.join(log_dir, "last_startup.log"), mode="w"
+    os.path.join(log_dir, "last_startup.log"),  # type: ignore[arg-type]
+    mode="w",  # type: ignore[arg-type]
 )
 last_startup_file_handler.setFormatter(file_format)
 
 # Хендлер для файла с текущей датой с режимом 'a' (append)
 date_file_handler = logging.FileHandler(
-    os.path.join(log_dir, f"{datetime.datetime.now().strftime('%Y-%m-%d')}.log"),
+    os.path.join(log_dir, f"{datetime.datetime.now().strftime('%Y-%m-%d')}.log"),  # type: ignore[arg-type]
     mode="a",
 )
 date_file_handler.setFormatter(file_format)
@@ -66,7 +68,7 @@ class Logger:
                 res = await func(self, *args, **kwargs)
                 return res
             except Exception as e:
-                logger: Logger = self.logger
+                logger: Logger = self.logger  # type: ignore
                 logger.exception(f"Exception in {func.__name__} " + str(e))
                 raise e
 
