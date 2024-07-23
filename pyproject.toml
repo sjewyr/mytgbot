@@ -17,6 +17,7 @@ redis = "^5.0.7"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
+ruff = "^0.5.4"
 
 [build-system]
 requires = ["poetry-core"]

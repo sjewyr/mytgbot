@@ -1,5 +1,4 @@
 import os
-from asyncpg import connect
 from database import ConnectionManager
 import sys
 from logger import Logger
@@ -18,7 +17,7 @@ class MigrationManager:
             id SERIAL PRIMARY KEY,
             telegram_id BIGINT UNIQUE NOT NULL,
             currency BIGINT DEFAULT 0
-        ); 
+        );
         """
 
         self.buildings = """

@@ -1,6 +1,5 @@
 from typing import Type
 import asyncpg
-import os
 from settings import Settings
 from logger import Logger
 
@@ -51,7 +50,7 @@ class ConnectionManager:
         try:
             async with self as connection:
                 return await connection.execute("SELECT 1")
-        except:
+        except Exception:
             return False
 
     @Logger.log_exception

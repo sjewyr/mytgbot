@@ -1,8 +1,5 @@
 import asyncio
-import signal
-import time
 
-import celery.result
 from buildings.buildings_repo import BuildingDAO
 from database import ConnectionManager
 from settings import Settings
@@ -14,13 +11,10 @@ from users.user_repo import UserDAO
 from aiogram.utils.keyboard import (
     ReplyKeyboardBuilder,
     InlineKeyboardBuilder,
-    InlineKeyboardMarkup,
-    ButtonType,
 )
 from middleware import LoginMiddleware
 from task_manager import TaskManager
 from tasks import simple_task
-
 
 
 class MyBasicKeyboard:
@@ -55,9 +49,7 @@ class Game:
         logged_router.callback_query.middleware(LoginMiddleware("callback"))
         logged_router.message.register(self.balance, F.text.lower() == "баланс")
         logged_router.message.register(self.update, F.text.lower() == "обновить")
-        logged_router.message.register(
-            self.prestige_show, F.text.lower() == "престиж"
-        )
+        logged_router.message.register(self.prestige_show, F.text.lower() == "престиж")
         logged_router.message.register(
             self.message_buildings_list, F.text.lower() == "список зданий"
         )
@@ -71,29 +63,35 @@ class Game:
         self.dp.include_router(start_router)
         self.dp.include_router(logged_router)
 
-
     @Logger.log_exception
     async def prestige_buy(self, callback: types.CallbackQuery):
         prestige = await self.user_dao.get_prestige(callback.from_user.id)
-        cur = await self.user_dao.get_currency(callback.from_user.id) 
+        cur = await self.user_dao.get_currency(callback.from_user.id)
         if cur < Settings.prestige_formula(prestige):
-            await callback.message.answer("У вас недостаточно денег для покупки престижа.")
+            await callback.message.answer(
+                "У вас недостаточно денег для покупки престижа."
+            )
             await callback.answer()
             return
         await self.user_dao.prestige_up(callback.from_user.id)
         await callback.message.answer("Престиж получен")
         await callback.answer()
+
     @Logger.log_exception
     async def prestige_show(self, message: types.Message):
         prestige = await self.user_dao.get_prestige(message.from_user.id)
         await message.answer(f"Ваш престиж: {prestige}")
         keyboard = InlineKeyboardBuilder()
-        keyboard.add(types.InlineKeyboardButton(text="Престиж", callback_data="prestige"))
-        await message.answer(f"Цена престижа: {Settings.prestige_formula(prestige)}", reply_markup=keyboard.as_markup())
+        keyboard.add(
+            types.InlineKeyboardButton(text="Престиж", callback_data="prestige")
+        )
+        await message.answer(
+            f"Цена престижа: {Settings.prestige_formula(prestige)}",
+            reply_markup=keyboard.as_markup(),
+        )
 
     @Logger.log_exception
     async def update(self, message: types.Message):
-
         await message.answer(
             "Обновление клавиатуры", reply_markup=MyBasicKeyboard().get_keyboard()
         )
@@ -115,7 +113,6 @@ class Game:
 
     @Logger.log_exception
     async def start(self, message: types.Message):
-
         self.logger.info(f"Starting user {message.from_user.id}...")
         telegram_id = message.from_user.id
         exists = await self.user_dao.check_user(telegram_id)
@@ -164,7 +161,9 @@ class Game:
             self.logger.warning("Unrecognizable data in buy building")
         telegram_id = callback.from_user.id
         if await self.user_dao.buy_building(telegram_id, building_id):
-            await callback.message.answer(f"Вы купили здание {await self.building_dao.get_building_name(building_id)}")
+            await callback.message.answer(
+                f"Вы купили здание {await self.building_dao.get_building_name(building_id)}"
+            )
             new_status = await self.user_dao.get_currency_status(telegram_id)
             await callback.message.answer(
                 f"Ваш баланс: {new_status[0]}$ + ({new_status[1]}$\мин)"
@@ -189,6 +188,7 @@ class Game:
             await self.user_dao.currency_tick()
             await asyncio.sleep(Settings.currency_tick_interval)
 
+
 async def balls(arg1, kwarg2=""):
     logger.info(f"Balls task started with arguments: {arg1}, {kwarg2}")
 
@@ -200,11 +200,18 @@ async def main():
         return
     logger.info("Database is initialized")
     dp = Dispatcher()
-    game = Game(dp)
+    Game(dp)
     bot = Bot(token=Settings.token, default=DefaultBotProperties())
     logger.info("TaskManager started")
     tasks = TaskManager()
-    tasks.apply_with_delay(simple_task, 2, args=[10], callback=balls, args_for_callback=[11], kwargs_for_callback={"kwarg2":"dick"})
+    tasks.apply_with_delay(
+        simple_task,
+        2,
+        args=[10],
+        callback=balls,
+        args_for_callback=[11],
+        kwargs_for_callback={"kwarg2": "dick"},
+    )
     tasks.apply_periodic(simple_task, 2, 15)
     await dp.start_polling(bot)
 
