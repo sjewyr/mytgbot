@@ -21,3 +21,6 @@ class Settings:
         os.environ.get("TELEGRAMBOT_CURRENCY_TICK_INTERVAL") or 60
     )
     prestige_formula = prestige_formula
+
+    broker = os.environ.get("TELEGRAMBOT_BROKER")
+    backend = os.environ.get("TELEGRAMBOT_BROKER_BACKEND")

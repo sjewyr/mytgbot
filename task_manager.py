@@ -18,13 +18,13 @@ class TaskManager:
     def apply_with_delay(
         self,
         task: Callable,
-        delay: int,
+        delay: int = 0,
         args: Optional[list[Any]] = None,
         kwargs: Optional[dict[Any, Any]] = None,
         callback: Optional[Awaitable] = None,
         args_for_callback=None,
         kwargs_for_callback=None,
-    ):
+    ) -> AsyncResult:
         self.logger.info(f"Applying task {task.__name__} with delay {delay} seconds")
         _task = task.apply_async(args, kwargs, countdown=delay)  # type: ignore[attr-defined]
         self.tasks.update(
@@ -33,6 +33,14 @@ class TaskManager:
                 if callback
                 else None
             }
+        )
+        return _task
+
+    def wait(self, task):
+        if task in self.tasks:
+            return task.get()
+        return ValueError(
+            f"{task} should be a valid task, started by this task manager"
         )
 
     def apply_periodic(self, task, interval, *args, **kwargs):

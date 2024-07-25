@@ -11,7 +11,7 @@ from logger import Logger
 from middleware import LoginMiddleware
 from settings import Settings
 from task_manager import TaskManager
-from tasks import simple_task
+from tasks import await_check_init
 from users.user_repo import UserDAO
 
 
@@ -202,15 +202,14 @@ async def main():
     bot = Bot(token=Settings.token, default=DefaultBotProperties())
     logger.info("TaskManager started")
     tasks = TaskManager()
-    tasks.apply_with_delay(
-        simple_task,
-        2,
-        args=[10],
-        callback=balls,
-        args_for_callback=[11],
-        kwargs_for_callback={"kwarg2": "dick"},
-    )
-    tasks.apply_periodic(simple_task, 2, 15)
+    try:
+        task = tasks.apply_with_delay(await_check_init)
+        logger.info("Task system initialition checking...")
+        assert tasks.wait(task)
+    except Exception as e:
+        logger.fatal(f"Task system failed to initialize: {e}")
+        return
+
     await dp.start_polling(bot)
 
 
