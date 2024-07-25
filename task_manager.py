@@ -3,8 +3,8 @@ from typing import Any, Awaitable, Callable, Optional
 
 from celery.result import AsyncResult
 
+from celery_tasks import app
 from logger import Logger
-from tasks import app
 
 
 class TaskManager:

@@ -1,3 +1,3 @@
 python tables.py migrate
-celery -A tasks worker --detach -f stdout --loglevel DEBUG
+celery -A celery_tasks worker --detach -f stdout --loglevel DEBUG
 python main.py

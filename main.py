@@ -6,12 +6,13 @@ from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from buildings.buildings_repo import BuildingDAO
+from celery_tasks import await_check_init
 from database import ConnectionManager
 from logger import Logger
 from middleware import LoginMiddleware
 from settings import Settings
 from task_manager import TaskManager
-from tasks import await_check_init
+from tasks.tasks_repo import UserTaskDAO
 from users.user_repo import UserDAO
 
 
@@ -35,6 +36,7 @@ class Game:
     def __init__(self, dp: Dispatcher):
         self.user_dao = UserDAO()
         self.building_dao = BuildingDAO()
+        self.user_task_dao = UserTaskDAO()
         self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
         self.dp = dp
         self.register_handlers()
@@ -69,7 +71,15 @@ class Game:
 
     @Logger.log_exception
     async def tasks_list(self, message: types.Message):
-        await message.answer("Boy next door")
+        tasks = await self.user_task_dao.get_tasks(message.from_user.id)
+        for task in tasks:
+            kb = InlineKeyboardBuilder()
+            kb.add(
+                types.InlineKeyboardButton(
+                    text="Выполнить", callback_data=f"task_{task.id}"
+                )
+            )
+            await message.answer(task.get_info(), reply_markup=kb.as_markup())
 
     @Logger.log_exception
     async def prestige_buy(self, callback: types.CallbackQuery):
