@@ -40,6 +40,10 @@ class Game:
         asyncio.create_task(self.currency_ticking())
 
     def register_handlers(self):
+        """
+        Method to register handlers
+        """
+
         start_router = Router(name="start")
         start_router.message.register(self.start, CommandStart())
         logged_router = Router(name="main")
@@ -111,6 +115,9 @@ class Game:
 
     @Logger.log_exception
     async def start(self, message: types.Message):
+        """
+        User registration method
+        """
         self.logger.info(f"Starting user {message.from_user.id}...")
         telegram_id = message.from_user.id
         exists = await self.user_dao.check_user(telegram_id)
@@ -185,10 +192,6 @@ class Game:
         while True:
             await self.user_dao.currency_tick()
             await asyncio.sleep(Settings.currency_tick_interval)
-
-
-async def balls(arg1, kwarg2=""):
-    logger.info(f"Balls task started with arguments: {arg1}, {kwarg2}")
 
 
 async def main():

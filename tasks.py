@@ -15,4 +15,11 @@ def simple_task(reward):
 
 @app.task()
 def await_check_init():
+    """
+    Check if task system is initialized correctly.
+
+    Returns:
+        bool: True if initialized correctly
+    """
+    logger.info("Checking task system initialization...")
     return True

@@ -8,7 +8,15 @@ from users.user_repo import UserDAO
 
 
 class LoginMiddleware(BaseMiddleware):
+    """
+    Middleware for checking user's registration, denies access to unregistered users sending them a login request
+    """
+
     def __init__(self, typ):
+        """
+        Create a new Login middleware
+        :param typ: Type of the event (message, callback)
+        """
         self.logger = Logger(__class__.__name__).get_logger()
         self.user_dao = UserDAO()
         self.type = typ

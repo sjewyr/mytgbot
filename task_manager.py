@@ -8,6 +8,10 @@ from tasks import app
 
 
 class TaskManager:
+    """
+    Convenience class for managing celery tasks, providing methods for applying tasks and w
+    """
+
     def __init__(self) -> None:
         self.logger = Logger("TaskManager").get_logger()
         self.tasks: dict[

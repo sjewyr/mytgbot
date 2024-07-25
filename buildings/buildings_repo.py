@@ -11,6 +11,9 @@ class BuildingDAO:
 
     @Logger.log_exception
     async def list_buildings(self, telegram_id: int) -> list[Building]:
+        """
+        Returns list of buildings for specified user (with prestige calculation)
+        """
         res = await self.connection_manager.fetch_objects(
             "SELECT id, cost, name, income*(SELECT prestige FROM users WHERE telegram_id=$1) as income FROM buildings",
             Building,
@@ -21,6 +24,9 @@ class BuildingDAO:
 
     @Logger.log_exception
     async def get_building_name(self, id: int) -> str:
+        """
+        Returns name of the building by its ID
+        """
         async with self.connection_manager as connection:
             return await connection.fetchval(
                 "SELECT name FROM buildings WHERE id = $1", id

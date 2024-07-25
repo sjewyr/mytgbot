@@ -14,6 +14,10 @@ class ConnectionManager:
         self.connection.close()
 
     async def create_database(self):
+        """
+        Creates a new PostgreSQL database.
+        """
+
         self.connection = await asyncpg.connect(
             host=Settings.database_host,
             port=Settings.database_port,
@@ -43,12 +47,18 @@ class ConnectionManager:
         if self.connection:
             await self.connection.close()
 
-    async def fetch_objects(self, query, cls: Type, *args):
+    async def fetch_objects(self, query: str, cls: Type, *args):
+        """
+        Convenience method for fetching objects of a given type from the database
+        """
         async with self as connection:
             res = await connection.fetch(query, *args)
             return [cls(**obj) for obj in res]
 
     async def check_database(self):
+        """
+        Checks if the database connection is available
+        """
         try:
             async with self as connection:
                 return await connection.execute("SELECT 1")
@@ -57,6 +67,9 @@ class ConnectionManager:
 
     @Logger.log_exception
     async def drop_db(self):
+        """
+        Drops the PostgreSQL database.
+        """
         try:
             self.connection = await asyncpg.connect(
                 host=Settings.database_host,

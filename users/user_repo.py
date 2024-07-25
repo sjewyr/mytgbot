@@ -3,12 +3,20 @@ from logger import Logger
 
 
 class UserDAO:
+    """
+    Class for interacting with user model in database.
+    """
+
     def __init__(self) -> None:
         self.connection_manager = ConnectionManager()
         self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
 
     @Logger.log_exception
     async def prestige_up(self, telegram_id: int) -> None:
+        """
+        Increases user's prestige by 1 and gives them 1000$ currency for each prestige.
+        Deletes all user's buildings.
+        """
         async with self.connection_manager as conn:
             await conn.execute(
                 "UPDATE users SET prestige = prestige + 1 WHERE telegram_id = $1",
@@ -30,6 +38,9 @@ class UserDAO:
 
     @Logger.log_exception
     async def register_user(self, telegram_id: int) -> None:
+        """
+        Inserts new user into the database.
+        """
         async with self.connection_manager as conn:
             await conn.execute(
                 "INSERT INTO users (telegram_id) VALUES ($1)", telegram_id
@@ -38,6 +49,11 @@ class UserDAO:
 
     @Logger.log_exception
     async def check_user(self, telegram_id: int) -> bool:
+        """
+        Checks if user with given telegram_id exists in the database.
+        :returns: True if exists, False otherwise.
+        """
+
         async with self.connection_manager as conn:
             result = await conn.fetchrow(
                 "SELECT * FROM users WHERE telegram_id = $1", telegram_id
@@ -49,6 +65,10 @@ class UserDAO:
 
     @Logger.log_exception
     async def buy_building(self, telegram_id: int, building_id: int) -> bool:
+        """
+        Attempts to buy building with given id for user with given telegram_id.
+        :returns: True if user can afford the building, False otherwise.
+        """
         async with self.connection_manager as conn:
             can_afford = await conn.fetchval(
                 "SELECT u.currency >= (SELECT b.cost FROM buildings b WHERE b.id = $1) FROM users u WHERE u.telegram_id = $2",
@@ -73,6 +93,10 @@ class UserDAO:
 
     @Logger.log_exception
     async def currency_tick(self):
+        """
+        Increases currency by income of all buildings owned by users.\n
+        Should be called periodically during the game.
+        """
         async with self.connection_manager as conn:
             await conn.execute(
                 """UPDATE users SET currency = currency +
@@ -86,12 +110,22 @@ class UserDAO:
 
     @Logger.log_exception
     async def get_currency(self, telegram_id: int) -> int:
+        """
+        Returns currency for specified user
+        :param telegram_id: The telegram id of the user
+        :return: The user's currency
+        """
         async with self.connection_manager as conn:
             return await conn.fetchval(
                 "SELECT currency FROM users WHERE telegram_id = $1", telegram_id
             )
 
     async def get_income(self, telegram_id: int) -> int:
+        """
+        Returns income for specified user
+        :param telegram_id: The telegram id of the user
+        :return: The user's income
+        """
         async with self.connection_manager as conn:
             return (
                 await conn.fetchval(
@@ -107,11 +141,21 @@ class UserDAO:
 
     @Logger.log_exception
     async def get_currency_status(self, telegram_id: int) -> list[int]:
+        """
+        Returns currency and income for specified user
+        :param telegram_id: The telegram id of the user
+        :return: A list containing the user's currency and income
+        """
         currency = await self.get_currency(telegram_id)
         income = await self.get_income(telegram_id)
         return [currency, income]
 
     async def get_prestige(self, telegram_id: int) -> int:
+        """
+        Returns prestige for specified user
+        :param telegram_id: The telegram id of the user
+        :return: The user's prestige
+        """
         async with self.connection_manager as conn:
             return await conn.fetchval(
                 "SELECT prestige FROM users WHERE telegram_id = $1", telegram_id

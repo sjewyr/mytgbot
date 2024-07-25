@@ -1,3 +1,7 @@
+"""
+Module for logging in the application, provides Logger class which logs into the stdout and log directory defined in the configuration
+"""
+
 import datetime
 import logging
 import os
@@ -48,7 +52,18 @@ date_file_handler.setFormatter(file_format)
 
 
 class Logger:
+    """
+    Logger conveneince class,
+    provides a single point of access to the logger,
+    adds handlers for stdout and log file,
+    and adds static decorator to log exceptions.\n
+    Logger should be accessed via get_logger method and used as a built-in logging.
+    """
+
     def __init__(self, name):
+        """
+        Initialize logger with provided name
+        """
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
@@ -58,10 +73,20 @@ class Logger:
         self.logger.addHandler(date_file_handler)
 
     def get_logger(self):
+        """
+        Returns logger instance
+        """
         return self.logger
 
     @staticmethod
     def log_exception(func):
+        """
+        Decorator to log an exceptions\n
+        Should be used as a static method only\n
+        Should be used to decorate an awaitable functions only\n
+        Should be used to decorate functions within a class that provide self.logger attribute\n
+        """
+
         @wraps(func)
         async def wrapper(self, *args, **kwargs):
             try:
