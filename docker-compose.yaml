@@ -5,7 +5,6 @@ networks:
 volumes:
   database_data:
     driver: local
-  redis_data:
 
 
 services:

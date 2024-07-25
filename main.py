@@ -22,6 +22,7 @@ class MyBasicKeyboard:
         self.keyboard.add(types.KeyboardButton(text="Баланс"))
         self.keyboard.add(types.KeyboardButton(text="Обновить"))
         self.keyboard.add(types.KeyboardButton(text="Престиж"))
+        self.keyboard.add(types.KeyboardButton(text="Задачи"))
         self.keyboard.adjust(2, 5)
 
     def get_keyboard(self):
@@ -52,6 +53,7 @@ class Game:
         logged_router.message.register(self.balance, F.text.lower() == "баланс")
         logged_router.message.register(self.update, F.text.lower() == "обновить")
         logged_router.message.register(self.prestige_show, F.text.lower() == "престиж")
+        logged_router.message.register(self.tasks_list, F.text.lower() == "задачи")
         logged_router.message.register(
             self.message_buildings_list, F.text.lower() == "список зданий"
         )
@@ -64,6 +66,10 @@ class Game:
         logged_router.callback_query.register(self.prestige_buy, F.data == "prestige")
         self.dp.include_router(start_router)
         self.dp.include_router(logged_router)
+
+    @Logger.log_exception
+    async def tasks_list(self, message: types.Message):
+        await message.answer("Boy next door")
 
     @Logger.log_exception
     async def prestige_buy(self, callback: types.CallbackQuery):
