@@ -19,7 +19,7 @@ class UserDAO:
         """
         async with self.connection_manager as conn:
             await conn.execute(
-                "UPDATE users SET prestige = prestige + 1 WHERE telegram_id = $1",
+                "UPDATE users SET prestige = prestige + 1, lvl = 1 WHERE telegram_id = $1",
                 telegram_id,
             )
             prestige = await conn.fetchval(
