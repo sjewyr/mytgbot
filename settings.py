@@ -9,6 +9,10 @@ def prestige_formula(x):
     return x**2 * 10000000
 
 
+def required_xp_formula(x):
+    return 100 + 150 * x
+
+
 class Settings:
     token = os.environ.get("TELEGRAMBOT_TOKEN")
     database_user = os.environ.get("TELEGRAMBOT_DB_USER")
@@ -21,6 +25,6 @@ class Settings:
         os.environ.get("TELEGRAMBOT_CURRENCY_TICK_INTERVAL") or 60
     )
     prestige_formula = prestige_formula
-
+    required_xp_formula = required_xp_formula
     broker = os.environ.get("TELEGRAMBOT_BROKER")
     backend = os.environ.get("TELEGRAMBOT_BROKER_BACKEND")

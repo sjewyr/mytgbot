@@ -1,5 +1,6 @@
 from database import ConnectionManager
 from logger import Logger
+from settings import Settings
 
 
 class UserDAO:
@@ -19,7 +20,7 @@ class UserDAO:
         """
         async with self.connection_manager as conn:
             await conn.execute(
-                "UPDATE users SET prestige = prestige + 1, lvl = 1 WHERE telegram_id = $1",
+                "UPDATE users SET prestige = prestige + 1, lvl = 1, xp = 0 WHERE telegram_id = $1",
                 telegram_id,
             )
             prestige = await conn.fetchval(
@@ -159,4 +160,39 @@ class UserDAO:
         async with self.connection_manager as conn:
             return await conn.fetchval(
                 "SELECT prestige FROM users WHERE telegram_id = $1", telegram_id
+            )
+
+    async def get_xp(self, telegram_id: int, xp_amount: int) -> None:
+        async with self.connection_manager as conn:
+            cur_xp = await conn.fetchval(
+                "SELECT xp FROM users WHERE telegram_id = $1", telegram_id
+            )
+            cur_lvl = await conn.fetchval(
+                "SELECT lvl FROM users WHERE telegram_id = $1", telegram_id
+            )
+            needed_xp = Settings.required_xp_formula(cur_lvl)
+            if cur_xp + xp_amount >= needed_xp:
+                new_lvl = cur_lvl + 1
+                new_amount = cur_xp + xp_amount - needed_xp
+                await conn.execute(
+                    "UPDATE users SET lvl = $2 WHERE telegram_id = $1",
+                    telegram_id,
+                    new_lvl,
+                )
+                self.logger.info(f"User {telegram_id} leveled up to {new_lvl}")
+                await conn.execute(
+                    "UPDATE users SET xp = $2 WHERE telegram_id = $1",
+                    telegram_id,
+                    new_amount,
+                )
+            else:
+                await conn.execute(
+                    "UPDATE users SET xp = xp + $2 WHERE telegram_id = $1",
+                    telegram_id,
+                    xp_amount,
+                )
+            await conn.execute(
+                "UPDATE users SET xp = xp + $2 WHERE telegram_id = $1",
+                telegram_id,
+                xp_amount,
             )
