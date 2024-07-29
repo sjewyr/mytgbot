@@ -101,7 +101,7 @@ class Game:
         await self.user_task_dao.start_task(callback.from_user.id, task_id)
         self.task_manager.apply_with_delay(
             start_user_task,
-            delay=task.length,
+            delay=task.length * 60,
             args=(callback.from_user.id, task_id),
             callback=self.callback_for_completed_user_tasks,
             args_for_callback=(callback.from_user.id, task_id, callback),

@@ -70,4 +70,4 @@ class TaskManager:
                                 kwargs = {}
                             await callback(*args, **kwargs)
                     self.tasks.pop(task)
-            await asyncio.sleep(6)
+            await asyncio.sleep(3)

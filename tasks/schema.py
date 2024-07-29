@@ -16,4 +16,4 @@ class UserTask(BaseModel):
 
     def get_info(self):
         """Returns a formatted string containing the task's details for user."""
-        return f"{self.name} [{self.cost}$]: {self.reward}$ + {self.exp_reward}exp, {self.length}m"
+        return f"{self.name} [{self.cost}$ {self.lvl_required} LVL]: {self.reward}$ + {self.exp_reward}exp, {self.length}m"
