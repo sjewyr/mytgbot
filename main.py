@@ -6,13 +6,13 @@ from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from buildings.buildings_repo import BuildingDAO
-from celery_tasks import await_check_init
+from celery_tasks import await_check_init, start_user_task
 from database import ConnectionManager
 from logger import Logger
 from middleware import LoginMiddleware
 from settings import Settings
 from task_manager import TaskManager
-from tasks.tasks_repo import UserTaskDAO
+from tasks.tasks_repo import TaskStatus, UserTaskDAO
 from users.user_repo import UserDAO
 
 
@@ -37,6 +37,7 @@ class Game:
         self.user_dao = UserDAO()
         self.building_dao = BuildingDAO()
         self.user_task_dao = UserTaskDAO()
+        self.task_manager = TaskManager()
         self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
         self.dp = dp
         self.register_handlers()
@@ -65,9 +66,55 @@ class Game:
         logged_router.callback_query.register(
             self.buy_building, F.data.startswith("buy_")
         )
+        logged_router.callback_query.register(
+            self.start_task, F.data.startswith("task_")
+        )
         logged_router.callback_query.register(self.prestige_buy, F.data == "prestige")
         self.dp.include_router(start_router)
         self.dp.include_router(logged_router)
+
+    @Logger.log_exception
+    async def start_task(self, callback: types.CallbackQuery):
+        task_id = int(callback.data.split("_")[1])
+        task = await self.user_task_dao.get_task(callback.from_user.id, task_id)
+        can_afford = await self.user_task_dao.can_afford(callback.from_user.id, task_id)
+        if can_afford == TaskStatus.NOT_ENOUGH_MONEY:
+            await callback.message.answer("У вас недостаточно денег.")
+            await callback.answer()
+            return
+        if can_afford == TaskStatus.INSUFFICIENT_LEVEL:
+            await callback.message.answer("Ваш уровень слишком низкий.")
+            await callback.answer()
+            return
+        if can_afford == TaskStatus.ALREADY_EXECUTED:
+            active_task_id = await self.user_task_dao.get_active_user_task(
+                callback.from_user.id
+            )
+            active_task = await self.user_task_dao.get_task(
+                callback.from_user.id, active_task_id
+            )
+            await callback.message.answer(
+                f"Вы уже выполняете задачу: {active_task.name}"
+            )
+            await callback.answer()
+            return
+        await self.user_task_dao.start_task(callback.from_user.id, task_id)
+        self.task_manager.apply_with_delay(
+            start_user_task,
+            delay=task.length,
+            args=(callback.from_user.id, task_id),
+            callback=self.callback_for_completed_user_tasks,
+            args_for_callback=(callback.from_user.id, task_id, callback),
+        )
+        self.logger.info(f"Task {task_id} started for user {callback.from_user.id}")
+        await callback.message.answer("Задача началась")
+        await callback.answer()
+
+    async def callback_for_completed_user_tasks(
+        self, telegram_id, task_id, callback: types.CallbackQuery
+    ):
+        await callback.message.answer("Задача выполнена")
+        self.logger.info(f"Task {task_id} completed for user {telegram_id}")
 
     @Logger.log_exception
     async def tasks_list(self, message: types.Message):

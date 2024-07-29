@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Callable, Coroutine, Iterable, Optional
 
 from celery.result import AsyncResult
 
@@ -23,9 +23,9 @@ class TaskManager:
         self,
         task: Callable,
         delay: int = 0,
-        args: Optional[list[Any]] = None,
+        args: Optional[Iterable[Any]] = None,
         kwargs: Optional[dict[Any, Any]] = None,
-        callback: Optional[Awaitable] = None,
+        callback: Optional[Callable[[Any, Any, Any], Coroutine[Any, Any, Any]]] = None,
         args_for_callback=None,
         kwargs_for_callback=None,
     ) -> AsyncResult:
@@ -64,6 +64,10 @@ class TaskManager:
                     if self.tasks[task]:
                         callback, args, kwargs = self.tasks[task]
                         if callback:
+                            if not args:
+                                args = []
+                            if not kwargs:
+                                kwargs = {}
                             await callback(*args, **kwargs)
                     self.tasks.pop(task)
-            await asyncio.sleep(10)
+            await asyncio.sleep(6)
