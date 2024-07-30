@@ -34,7 +34,7 @@ class UserTaskDAO:
         )
         return tasks
 
-    async def task_completed(self, telegram_id, task_id) -> None:
+    async def task_completed(self, telegram_id, task_id) -> int | None:
         """
         Method to reward task completion
         """
@@ -51,8 +51,9 @@ class UserTaskDAO:
                 "DELETE FROM user_user_tasks WHERE user_id = (SELECT id FROM users WHERE telegram_id = $1)",
                 telegram_id,
             )
-            await UserDAO().get_xp(telegram_id, exp_reward)
+            res = await UserDAO().get_xp(telegram_id, exp_reward)
             self.logger.info(f"Task completion {task_id} by {telegram_id}")
+            return res
 
     async def get_task(self, telegram_id, task_id) -> UserTask:
         """

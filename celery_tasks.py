@@ -57,6 +57,7 @@ def start_user_task(telegram_id, task_id):
         telegram_id (int): Telegram id of the user
         task_id (int): Id of the task to be started
     """
-    logger.info(f"Starting task {task_id} for user {telegram_id}")
+    logger.info(f"Finished task {task_id} for user {telegram_id}")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(UserTaskDAO().task_completed(telegram_id, task_id))
+    res = loop.run_until_complete(UserTaskDAO().task_completed(telegram_id, task_id))
+    return res

@@ -13,6 +13,7 @@ from middleware import LoginMiddleware
 from settings import Settings
 from task_manager import TaskManager
 from tasks.tasks_repo import TaskStatus, UserTaskDAO
+from users.level_rewards import REWARD_DICT
 from users.user_repo import UserDAO
 
 
@@ -113,9 +114,13 @@ class Game:
         await callback.answer()
 
     async def callback_for_completed_user_tasks(
-        self, telegram_id, task_id, callback: types.CallbackQuery
+        self, res, telegram_id, task_id, callback: types.CallbackQuery
     ):
         await callback.message.answer("Задача выполнена")
+        if res:
+            await callback.message.answer(
+                f"Уровень повышен! Ваша награда: {REWARD_DICT.get(res).to_user()}"
+            )
         self.logger.info(f"Task {task_id} completed for user {telegram_id}")
 
     @Logger.log_exception

@@ -25,7 +25,7 @@ class TaskManager:
         delay: int = 0,
         args: Optional[Iterable[Any]] = None,
         kwargs: Optional[dict[Any, Any]] = None,
-        callback: Optional[Callable[[Any, Any, Any], Coroutine[Any, Any, Any]]] = None,
+        callback: Optional[Callable[..., Coroutine[Any, Any, Any]]] = None,
         args_for_callback=None,
         kwargs_for_callback=None,
     ) -> AsyncResult:
@@ -61,17 +61,18 @@ class TaskManager:
                 self.logger.debug(f"{task.id}: {task.state}")
                 if task.state == "SUCCESS" or task.state == "FAILURE":
                     self.logger.info(f"Task {task} result: {task.result}, {task.state}")
-                    task.forget()
                     if self.tasks[task]:
                         self.logger.info(
                             f"Executing callback for task {task} result: {task.result}, {task.state}"
                         )
                         callback, args, kwargs = self.tasks[task]
                         if callback:
+                            res = task.result
                             if not args:
                                 args = []
                             if not kwargs:
                                 kwargs = {}
-                            await callback(*args, **kwargs)
+                            await callback(res, *args, **kwargs)
                     self.tasks.pop(task)
+                    task.forget()
             await asyncio.sleep(3)

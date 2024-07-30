@@ -1,6 +1,7 @@
 from database import ConnectionManager
 from logger import Logger
 from settings import Settings
+from users.level_rewards import REWARD_DICT
 
 
 class UserDAO:
@@ -174,7 +175,7 @@ class UserDAO:
                 "SELECT prestige FROM users WHERE telegram_id = $1", telegram_id
             )
 
-    async def get_xp(self, telegram_id: int, xp_amount: int) -> None:
+    async def get_xp(self, telegram_id: int, xp_amount: int) -> int | None:
         async with self.connection_manager as conn:
             cur_xp = await conn.fetchval(
                 "SELECT xp FROM users WHERE telegram_id = $1", telegram_id
@@ -184,27 +185,34 @@ class UserDAO:
             )
             needed_xp = Settings.required_xp_formula(cur_lvl)
             if cur_xp + xp_amount >= needed_xp:
-                new_lvl = cur_lvl + 1
                 new_amount = cur_xp + xp_amount - needed_xp
-                await conn.execute(
-                    "UPDATE users SET lvl = $2 WHERE telegram_id = $1",
-                    telegram_id,
-                    new_lvl,
-                )
-                self.logger.info(f"User {telegram_id} leveled up to {new_lvl}")
                 await conn.execute(
                     "UPDATE users SET xp = $2 WHERE telegram_id = $1",
                     telegram_id,
                     new_amount,
                 )
+                await self.level_up(telegram_id)
+
+                return cur_lvl + 1
             else:
                 await conn.execute(
                     "UPDATE users SET xp = xp + $2 WHERE telegram_id = $1",
                     telegram_id,
                     xp_amount,
                 )
+                return None
+
+    @Logger.log_exception
+    async def level_up(self, telegram_id):
+        """
+        Increases user's level by 1 and gives reward for leveling.
+        """
+        async with self.connection_manager as conn:
             await conn.execute(
-                "UPDATE users SET xp = xp + $2 WHERE telegram_id = $1",
+                "UPDATE users SET lvl = lvl + 1 WHERE telegram_id = $1",
                 telegram_id,
-                xp_amount,
             )
+            self.logger.info(f"User {telegram_id} leveled up")
+        reward = REWARD_DICT.get(self.get_level(telegram_id))
+        if reward:
+            await conn.execute(reward.to_sql(), telegram_id)
