@@ -13,6 +13,18 @@ class UserDAO:
         self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
 
     @Logger.log_exception
+    async def get_level(self, telegram_id: int) -> tuple[int, int, int]:
+        """
+        Returns user's current level, experience, and needed exp.
+        """
+        async with self.connection_manager as conn:
+            lvl, xp = await conn.fetchrow(
+                "SELECT lvl, xp FROM users WHERE telegram_id = $1", telegram_id
+            )
+            max_exp = Settings.required_xp_formula(lvl)
+            return (lvl, xp, max_exp)
+
+    @Logger.log_exception
     async def prestige_up(self, telegram_id: int) -> None:
         """
         Increases user's prestige by 1 and gives them 1000$ currency for each prestige.

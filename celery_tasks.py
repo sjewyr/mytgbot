@@ -7,25 +7,26 @@ from settings import Settings
 from tasks.tasks_repo import UserTaskDAO
 
 logger = Logger("Celery").get_logger()
-app = Celery("tasks", broker=Settings.broker, backend=Settings.backend)
-
-app.conf.update(
-    task_serializer="json",
-    result_serializer="json",
-    accept_content=["json"],
-    timezone="UTC",
-    enable_utc=True,
-    task_default_queue="default",
-    task_default_exchange_type="direct",
-    task_default_routing_key="default",
-    worker_prefetch_multiplier=1,
-    broker_heartbeat=10,
-    broker_connection_timeout=30,
-    task_acks_late=True,
-    task_reject_on_worker_lost=True,
-    worker_send_task_events=True,
-    task_send_sent_event=True,
-    task_track_started=True,
+conf = {
+    "task_serializer": "json",
+    "result_serializer": "json",
+    "accept_content": ["json"],
+    "timezone": "UTC",
+    "enable_utc": True,
+    "task_default_queue": "default",
+    "task_default_exchange_type": "direct",
+    "task_default_routing_key": "default",
+    "worker_prefetch_multiplier": 1,
+    "broker_heartbeat": 10,
+    "broker_connection_timeout": 30,
+    "task_acks_late": True,
+    "task_reject_on_worker_lost": True,
+    "worker_send_task_events": True,
+    "task_send_sent_event": True,
+    "task_track_started": True,
+}
+app = Celery(
+    "tasks", broker=Settings.broker, backend=Settings.backend, config_source=conf
 )
 
 

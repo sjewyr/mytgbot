@@ -24,7 +24,8 @@ class MyBasicKeyboard:
         self.keyboard.add(types.KeyboardButton(text="Обновить"))
         self.keyboard.add(types.KeyboardButton(text="Престиж"))
         self.keyboard.add(types.KeyboardButton(text="Задачи"))
-        self.keyboard.adjust(2, 5)
+        self.keyboard.add(types.KeyboardButton(text="Уровень"))
+        self.keyboard.adjust(3, 3)
 
     def get_keyboard(self):
         res = self.keyboard.as_markup()
@@ -57,6 +58,7 @@ class Game:
         logged_router.message.register(self.update, F.text.lower() == "обновить")
         logged_router.message.register(self.prestige_show, F.text.lower() == "престиж")
         logged_router.message.register(self.tasks_list, F.text.lower() == "задачи")
+        logged_router.message.register(self.level_info, F.text.lower() == "уровень")
         logged_router.message.register(
             self.message_buildings_list, F.text.lower() == "список зданий"
         )
@@ -117,6 +119,11 @@ class Game:
         self.logger.info(f"Task {task_id} completed for user {telegram_id}")
 
     @Logger.log_exception
+    async def level_info(self, message: types.Message):
+        level, exp, max_exp = await self.user_dao.get_level(message.from_user.id)
+        await message.answer(f"Ваш уровень: {level} [{exp}/{max_exp}]")
+
+    @Logger.log_exception
     async def tasks_list(self, message: types.Message):
         tasks = await self.user_task_dao.get_tasks(message.from_user.id)
         for task in tasks:
@@ -127,6 +134,14 @@ class Game:
                 )
             )
             await message.answer(task.get_info(), reply_markup=kb.as_markup())
+        active_task_id = await self.user_task_dao.get_active_user_task(
+            message.from_user.id
+        )
+        if active_task_id:
+            active_task = await self.user_task_dao.get_task(
+                message.from_user.id, active_task_id
+            )
+            await message.answer(f"Текущая задача: {active_task.name}")
 
     @Logger.log_exception
     async def prestige_buy(self, callback: types.CallbackQuery):

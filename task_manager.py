@@ -58,10 +58,14 @@ class TaskManager:
     async def catch_results(self):
         while True:
             for task in list(self.tasks):
+                self.logger.debug(f"{task.id}: {task.state}")
                 if task.state == "SUCCESS" or task.state == "FAILURE":
                     self.logger.info(f"Task {task} result: {task.result}, {task.state}")
                     task.forget()
                     if self.tasks[task]:
+                        self.logger.info(
+                            f"Executing callback for task {task} result: {task.result}, {task.state}"
+                        )
                         callback, args, kwargs = self.tasks[task]
                         if callback:
                             if not args:

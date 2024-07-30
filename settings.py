@@ -2,7 +2,7 @@ import os
 
 import dotenv
 
-dotenv.load_dotenv(dotenv_path="./.env")
+dotenv.load_dotenv(dotenv_path="./.env", override=True)
 
 
 def prestige_formula(x):
