@@ -260,7 +260,9 @@ class Game:
                 f"User {callback.from_user.id} bought building {building_id}"
             )
         else:
-            await callback.message.answer(f"Вы не можете купить здание {building_id}")
+            await callback.message.answer(
+                f"Вы не можете купить здание {self.building_dao.get_building_name(building_id)}"
+            )
 
         await callback.answer()
 
