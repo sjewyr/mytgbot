@@ -28,4 +28,4 @@ class Currency(Reward):
         return f"UPDATE users SET currency = currency + {self.amount} WHERE telegram_id = $1"
 
 
-REWARD_DICT: dict[int, Reward] = {i: Currency(i) for i in range(100)}
+REWARD_DICT: dict[int, Reward] = {i: Currency(i * 2000) for i in range(100)}
