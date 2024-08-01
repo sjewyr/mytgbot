@@ -124,3 +124,17 @@ services:
 
     networks:
       - database
+
+  tgbot_admin:
+    build: .
+    command: bash django_admin_start.sh
+    ports:
+      - 8045:8045
+    volumes:
+      - .:/app
+    depends_on:
+      - tgbot
+    networks:
+    - database
+    env_file:
+      - .env

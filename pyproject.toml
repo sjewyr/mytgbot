@@ -15,6 +15,8 @@ asyncpg = "^0.29.0"
 celery = {extras = ["redis"], version = "^5.4.0"}
 redis = "^5.0.7"
 flower = "^2.0.1"
+django = "^5.0.7"
+psycopg = "^3.2.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
