@@ -213,6 +213,6 @@ class UserDAO:
                 telegram_id,
             )
             self.logger.info(f"User {telegram_id} leveled up")
-        reward = REWARD_DICT.get(self.get_level(telegram_id))
+        reward = REWARD_DICT.get(await self.get_level(telegram_id))
         if reward:
             await conn.execute(reward.to_sql(), telegram_id)

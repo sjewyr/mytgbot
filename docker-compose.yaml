@@ -7,6 +7,8 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  rabbit_data:
+    driver: local
 
 
 services:
@@ -18,7 +20,7 @@ services:
     networks:
       - database
     volumes:
-      - redis_data:/redisdata
+      - redis_data:/data
     deploy:
       resources:
         limits:
@@ -52,16 +54,87 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  rabbit:
+   image: rabbitmq:latest
+   container_name: rabbit_service
+   environment:
+    - RABBITMQ_DEFAULT_USER=login
+    - RABBITMQ_DEFAULT_PASS=password
+   networks:
+    - database
+   hostname: rabbit_service
+   volumes:
+    - rabbit_data:/var/lib/rabbitmq
+
+  celery_worker:
+   container_name: celery_worker
+   build: .
+   command: bash celery_start.sh
+   volumes:
+   - .:/app
+   networks:
+     - database
+   depends_on:
+     - redis
+     - postgres
+     - rabbit
+
   tgbot:
     container_name: tgbot
     build: .
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
+      - celery_worker
+      - rabbit
     volumes:
-      - ./logs:/logs
+      - .:/app
+    command: bash entrypoint.sh
+    networks:
+      - database
+
+  celery_beat:
+    build: .
+    command: bash celery_beat_start.sh
+    volumes:
+    - .:/app
+    networks:
+      - database
+    depends_on:
+      - redis
+      - postgres
+      - rabbit
+
+
+  flower:
+    build: .
+    command: bash celery_flower_start.sh
+    volumes:
+      - .:/app
+    ports:
+      - 5557:5555
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+      - celery_worker
+      - rabbit
 
     networks:
       - database
+
+  tgbot_admin:
+    build: .
+    command: bash django_admin_start.sh
+    ports:
+      - 8045:8045
+    volumes:
+      - .:/app
+    depends_on:
+      - tgbot
+    networks:
+    - database
+    env_file:
+      - .env

@@ -29,8 +29,9 @@ class TaskManager:
         args_for_callback=None,
         kwargs_for_callback=None,
     ) -> AsyncResult:
-        self.logger.info(f"Applying task {task.__name__} with delay {delay} seconds")
+        self.logger.info(f"Applying task {task.__name__}, with delay {delay} seconds")
         _task = task.apply_async(args, kwargs, countdown=delay)  # type: ignore[attr-defined]
+        self.logger.debug(f"Applied task id {_task}")
         self.tasks.update(
             {
                 _task: [callback, args_for_callback, kwargs_for_callback]
