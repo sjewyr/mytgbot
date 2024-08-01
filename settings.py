@@ -10,7 +10,7 @@ def prestige_formula(x):
 
 
 def required_xp_formula(x):
-    return 200 * x
+    return 25 * x * x
 
 
 class Settings:
