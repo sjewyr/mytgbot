@@ -18,8 +18,8 @@ class Reward(ABC):
 
 
 class Currency(Reward):
-    def __init__(self, Amount) -> None:
-        self.amount = Amount
+    def __init__(self, amount) -> None:
+        self.amount = amount
 
     def to_user(self):
         return f"{self.amount}$"

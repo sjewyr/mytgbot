@@ -14,6 +14,21 @@ class UserDAO:
         self.logger = Logger(__class__.__name__).get_logger()  # type: ignore[name-defined]
 
     @Logger.log_exception
+    async def update_currency(self, telegram_id: int, currency_amount: int) -> None:
+        """Updates the currency (can be negative or positive)
+
+        :param telegram_id: telegram id of the user
+        :param currency_amount: amount to give (retract if negative)
+        :return: nothing
+        """
+        async with self.connection_manager as conn:
+            await conn.execute(
+                "UPDATE users SET currency = currency + $1 WHERE telegram_id = $2",
+                currency_amount,
+                telegram_id,
+            )
+
+    @Logger.log_exception
     async def get_level(self, telegram_id: int) -> tuple[int, int, int]:
         """
         Returns user's current level, experience, and needed exp.
@@ -191,9 +206,12 @@ class UserDAO:
                     telegram_id,
                     new_amount,
                 )
+
                 await self.level_up(telegram_id)
 
-                return cur_lvl + 1
+                recursive_level = await self.get_xp(telegram_id, 0)
+
+                return recursive_level or cur_lvl + 1
             else:
                 await conn.execute(
                     "UPDATE users SET xp = xp + $2 WHERE telegram_id = $1",
@@ -212,7 +230,11 @@ class UserDAO:
                 "UPDATE users SET lvl = lvl + 1 WHERE telegram_id = $1",
                 telegram_id,
             )
-            self.logger.info(f"User {telegram_id} leveled up")
-        reward = REWARD_DICT.get(await self.get_level(telegram_id))
-        if reward:
-            await conn.execute(reward.to_sql(), telegram_id)
+            self.logger.debug(f"User {telegram_id} leveled up")
+            level = await self.get_level(telegram_id)
+            level = level[0]
+            reward = REWARD_DICT.get(level)
+            self.logger.debug(f"User {telegram_id} got reward {reward.to_user()}")
+            if reward:
+                self.logger.debug(f"Executing reward {telegram_id}, {reward.to_sql()}")
+                await conn.execute(reward.to_sql(), telegram_id)

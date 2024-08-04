@@ -21,12 +21,11 @@ class MyBasicKeyboard:
     def __init__(self) -> None:
         self.keyboard = ReplyKeyboardBuilder()
         self.keyboard.add(types.KeyboardButton(text="Список зданий"))
-        self.keyboard.add(types.KeyboardButton(text="Баланс"))
+        self.keyboard.add(types.KeyboardButton(text="Статус"))
         self.keyboard.add(types.KeyboardButton(text="Обновить"))
         self.keyboard.add(types.KeyboardButton(text="Престиж"))
         self.keyboard.add(types.KeyboardButton(text="Задачи"))
-        self.keyboard.add(types.KeyboardButton(text="Уровень"))
-        self.keyboard.adjust(3, 3)
+        self.keyboard.adjust(2, 3)
 
     def get_keyboard(self):
         res = self.keyboard.as_markup()
@@ -55,11 +54,10 @@ class Game:
         logged_router = Router(name="main")
         logged_router.message.middleware(LoginMiddleware("message"))
         logged_router.callback_query.middleware(LoginMiddleware("callback"))
-        logged_router.message.register(self.balance, F.text.lower() == "баланс")
+        logged_router.message.register(self.balance, F.text.lower() == "статус")
         logged_router.message.register(self.update, F.text.lower() == "обновить")
         logged_router.message.register(self.prestige_show, F.text.lower() == "престиж")
         logged_router.message.register(self.tasks_list, F.text.lower() == "задачи")
-        logged_router.message.register(self.level_info, F.text.lower() == "уровень")
         logged_router.message.register(
             self.message_buildings_list, F.text.lower() == "список зданий"
         )
@@ -101,6 +99,7 @@ class Game:
             )
             await callback.answer()
             return
+        await self.user_dao.update_currency(callback.from_user.id, task.cost * (-1))
         await self.user_task_dao.start_task(callback.from_user.id, task_id)
         self.task_manager.apply_with_delay(
             start_user_task,
@@ -122,11 +121,6 @@ class Game:
                 f"Уровень повышен! Ваша награда: {REWARD_DICT.get(res).to_user()}"
             )
         self.logger.info(f"Task {task_id} completed for user {telegram_id}")
-
-    @Logger.log_exception
-    async def level_info(self, message: types.Message):
-        level, exp, max_exp = await self.user_dao.get_level(message.from_user.id)
-        await message.answer(f"Ваш уровень: {level} [{exp}/{max_exp}]")
 
     @Logger.log_exception
     async def tasks_list(self, message: types.Message):
@@ -270,7 +264,9 @@ class Game:
     async def balance(self, message: types.Message):
         user_id = message.from_user.id
         balance, income = await self.user_dao.get_currency_status(user_id)
+        level, exp, max_exp = await self.user_dao.get_level(user_id)
         await message.answer(f"Ваш баланс: {balance}$ + ({income}$\мин)")
+        await message.answer(f"Ваш уровень: {level} [{exp}/{max_exp}]")
 
     @Logger.log_exception
     async def currency_ticking(self):

@@ -39,9 +39,15 @@ class UserTaskDAO:
         Method to reward task completion
         """
         async with self.connection_manager as conn:
+            prestige = await conn.fetchval(
+                "SELECT prestige FROM users WHERE telegram_id = $1", telegram_id
+            )
+
             reward, exp_reward = await conn.fetchrow(
                 "SELECT reward, exp_reward FROM user_tasks WHERE id = $1", task_id
             )
+            reward *= prestige
+            exp_reward *= prestige
             await conn.execute(
                 "UPDATE users SET currency = currency + $1 WHERE telegram_id = $2",
                 reward,
